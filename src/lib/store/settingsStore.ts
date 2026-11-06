@@ -166,13 +166,13 @@ export const useSettings = create<SettingsState>()(
       unlockSecureVault: async (secret) => {
         const data = await decryptVault(secret);
         const state = settingsFromVault(data);
-        set({ keys: state.keys, models: { ...get().models, ...state.models }, vaultEnabled: true, vaultUnlocked: true });
+        set({ keys: state.keys, models: { ...get().models, ...state.models }, active: get().active || PROVIDER_ORDER.find((p) => !!state.keys[p]) || null, vaultEnabled: true, vaultUnlocked: true });
       },
       restoreSecureVault: async (secret) => {
         if (Object.keys(get().keys).length) throw new Error("This browser has existing keys. Create a local secure vault first, then sync to merge them.");
         const data = await restoreEncryptedVault(secret);
         const state = settingsFromVault(data);
-        set({ keys: state.keys, models: { ...get().models, ...state.models }, vaultEnabled: true, vaultUnlocked: true });
+        set({ keys: state.keys, models: { ...get().models, ...state.models }, active: get().active || PROVIDER_ORDER.find((p) => !!state.keys[p]) || null, vaultEnabled: true, vaultUnlocked: true });
       },
       syncSecureVault: async () => {
         if (!get().vaultUnlocked) throw new Error("Unlock the encrypted vault first.");
