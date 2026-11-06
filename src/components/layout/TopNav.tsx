@@ -4,6 +4,7 @@ import { useGita, type ThemePref } from "@/lib/store/useGitaStore";
 import { useConnection } from "@/lib/store/settingsStore";
 import { PROVIDERS } from "@/lib/llm/providers";
 import { BrandMark } from "@/components/sacred/SacredMotifs";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { useModKey } from "@/lib/hooks/useMedia";
 import { VIEWS } from "./views";
 
@@ -97,6 +98,7 @@ export function TopNav() {
           Ask
         </button>
         <span className="mx-1 hidden h-5 w-px bg-line-2 md:block" />
+        <InstallAppButton />
         <ThemeButton />
         <button className="btn btn-ghost btn-icon hidden md:inline-flex" onClick={() => setWelcomeOpen(true)} title="Guide: what each view does" aria-label="Open the guide">
           <CircleHelp size={16} />

@@ -16,8 +16,9 @@ export const metadata: Metadata = {
   title: "GitaViśva · The Bhagavad Gita as a knowledge graph",
   description:
     "Explore all 701 verses of the Bhagavad Gita as an interactive knowledge graph: read them with translations and commentary, trace how ideas connect, ask questions grounded in the text, and map your own reflections privately.",
-  applicationName: "GitaViśva",
-  icons: { icon: "/favicon.svg" },
+  applicationName: "Gita Lessons",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/icons/gita-192.png", sizes: "192x192", type: "image/png" }], apple: "/icons/gita-192.png" },
   openGraph: {
     type: "website",
     siteName: "GitaViśva",

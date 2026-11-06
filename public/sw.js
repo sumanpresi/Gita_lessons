@@ -1,8 +1,8 @@
 // GitaViswa service worker — makes the graph, verses, commentaries and app shell available offline.
 // Cache-first for immutable build assets and the knowledge-graph data; network-first for pages and APIs.
 // Bump VERSION when files under /images/ are replaced in place (they are cache-first and not content-hashed).
-const VERSION = "gitaviswa-v2";
-const SHELL = ["/", "/data/gita-verses.json", "/data/gita-graph.json", "/favicon.svg"];
+const VERSION = "gitaviswa-v3";
+const SHELL = ["/", "/manifest.webmanifest", "/icons/gita-192.png", "/icons/gita-512.png", "/data/gita-verses.json", "/data/gita-graph.json", "/favicon.svg"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
