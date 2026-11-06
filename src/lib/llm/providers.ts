@@ -1,6 +1,6 @@
 // Unified BYOK provider registry — every provider speaks the OpenAI-compatible /chat/completions protocol.
 
-export type ProviderId = "groq" | "openrouter" | "xai" | "openai" | "ollama";
+export type ProviderId = "groq" | "openrouter" | "xai" | "openai" | "gemini" | "ollama";
 
 export interface ModelPreset {
   id: string;
@@ -77,17 +77,37 @@ export const PROVIDERS: Record<ProviderId, ProviderInfo> = {
   openai: {
     id: "openai",
     name: "OpenAI",
-    tagline: "GPT-4o family",
+    tagline: "GPT-5.6 Luna and other OpenAI models",
     baseUrl: "https://api.openai.com/v1",
     envKey: "OPENAI_API_KEY",
     envModel: "OPENAI_MODEL",
-    defaultModel: "gpt-4o-mini",
+    defaultModel: "gpt-5.6-luna",
     models: [
+      { id: "gpt-5.6-luna", label: "GPT-5.6 Luna (efficient)" },
+      { id: "gpt-5.6-terra", label: "GPT-5.6 Terra" },
+      { id: "gpt-5.6-sol", label: "GPT-5.6 Sol" },
       { id: "gpt-4o-mini", label: "GPT-4o mini" },
       { id: "gpt-4o", label: "GPT-4o" },
     ],
     keyUrl: "https://platform.openai.com/api-keys",
     keyPrefix: "sk-",
+  },
+  gemini: {
+    id: "gemini",
+    name: "Google Gemini",
+    tagline: "Gemini 3.8 Flash and Google AI models",
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
+    envKey: "GEMINI_API_KEY",
+    envModel: "GEMINI_MODEL",
+    defaultModel: "gemini-3.8-flash",
+    models: [
+      { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash" },
+      { id: "gemini-3.7-flash", label: "Gemini 3.7 Flash" },
+      { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite" },
+      { id: "gemini-3.1-pro-preview", label: "Gemini 3.1 Pro (preview)" },
+    ],
+    keyUrl: "https://aistudio.google.com/api-keys",
+    keyPrefix: "AIza",
   },
   ollama: {
     id: "ollama",
@@ -108,7 +128,7 @@ export const PROVIDERS: Record<ProviderId, ProviderInfo> = {
   },
 };
 
-export const PROVIDER_ORDER: ProviderId[] = ["groq", "openrouter", "xai", "openai", "ollama"];
+export const PROVIDER_ORDER: ProviderId[] = ["openai", "gemini", "groq", "openrouter", "xai", "ollama"];
 
 export const isProviderId = (s: unknown): s is ProviderId => typeof s === "string" && s in PROVIDERS;
 

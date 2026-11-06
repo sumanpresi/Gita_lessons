@@ -60,6 +60,24 @@ function headers(p: ResolvedProvider): Record<string, string> {
   return h;
 }
 
+/** Build compatible parameters for reasoning models and Gemini's OpenAI-compatible API. */
+export function chatPayload(p: Pick<ResolvedProvider, "id" | "model">, messages: ChatMessage[], opts: { temperature?: number; maxTokens?: number } = {}) {
+  const modernOpenAI = p.id === "openai" && /^(?:gpt-[5-9][.\\-]|o[1-9](?:[.\\-]|$))/i.test(p.model);
+  const gemini = p.id === "gemini";
+  const limit = opts.maxTokens ?? (modernOpenAI || gemini ? 4096 : isReasoningModel(p.model) ? 2400 : 1100);
+  return {
+    model: p.model,
+    messages,
+    stream: true,
+    ...(modernOpenAI
+      ? { max_completion_tokens: limit, reasoning_effort: "low" }
+      : gemini
+        ? { max_tokens: limit, reasoning_effort: "low" }
+        : { temperature: opts.temperature ?? 0.5, max_tokens: limit }),
+    ...(p.id === "groq" && /gpt-oss/.test(p.model) ? { reasoning_effort: "low" } : {}),
+  };
+}
+
 /** Stream text deltas from any OpenAI-compatible endpoint. */
 export async function* streamChat(p: ResolvedProvider, messages: ChatMessage[], opts: { temperature?: number; maxTokens?: number; signal?: AbortSignal } = {}): AsyncGenerator<string> {
   let res: Response;
@@ -67,16 +85,7 @@ export async function* streamChat(p: ResolvedProvider, messages: ChatMessage[], 
     res = await fetch(p.url, {
       method: "POST",
       headers: headers(p),
-      body: JSON.stringify({
-        model: p.model,
-        messages,
-        stream: true,
-        temperature: opts.temperature ?? 0.5,
-        // Reasoning models spend tokens before answering; give them headroom.
-        max_tokens: opts.maxTokens ?? (isReasoningModel(p.model) ? 2400 : 1100),
-        // Groq's gpt-oss models stream reasoning separately; "low" keeps first-token latency down.
-        ...(p.id === "groq" && /gpt-oss/.test(p.model) ? { reasoning_effort: "low" } : {}),
-      }),
+      body: JSON.stringify(chatPayload(p, messages, opts)),
       signal: opts.signal,
     });
   } catch (e) {
@@ -127,7 +136,7 @@ export async function* streamChat(p: ResolvedProvider, messages: ChatMessage[], 
   }
 }
 
-const isReasoningModel = (m: string) => /gpt-oss|qwen3|deepseek-r1|o[134]|reason/i.test(m);
+const isReasoningModel = (m: string) => /gpt-oss|qwen3|deepseek-r1|gpt-[5-9]|gemini-3|reason|o[134]-/i.test(m);
 
 // ── model discovery & retired-model fallback ─────────────────────────────────────────────────────
 // Providers retire models (Groq dropped llama-3.3-70b-versatile in 2026). When a configured model is gone we
