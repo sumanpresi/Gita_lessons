@@ -63,7 +63,7 @@ export function SecureSyncSection() {
         </div>
         <p className="mt-1 text-[13px] leading-5 text-text-2">
           Keep your OpenAI, Gemini and other API keys available on your Z Fold and computer.
-          Keys are encrypted with your passphrase before they are saved locally or sent to Google Drive's private app-data folder.
+          Keys are encrypted with your passphrase before they are saved locally or sent to Google Drive&apos;s private app-data folder.
         </p>
       </div>
 
@@ -130,7 +130,7 @@ export function SecureSyncSection() {
         </div>
         {!clientReady && (
           <p className="mt-3 text-[12.5px] leading-5 text-danger">
-            Google OAuth setup is required. Configure NEXT_PUBLIC_GOOGLE_CLIENT_ID and authorise this website's origin in Google Cloud.
+            Google OAuth setup is required. Configure NEXT_PUBLIC_GOOGLE_CLIENT_ID and authorise this website&apos;s origin in Google Cloud.
           </p>
         )}
         <div className="mt-4 flex flex-wrap gap-2">
