@@ -16,6 +16,7 @@ export function SecureSyncSection() {
   const [phrase, setPhrase] = useState("");
   const [confirm, setConfirm] = useState("");
   const [connected, setConnected] = useState(false);
+  const [googleReady, setGoogleReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const clientReady = isDriveConfigured();
@@ -23,7 +24,7 @@ export function SecureSyncSection() {
 
   useEffect(() => {
     setConnected(hasDriveSession());
-    if (clientReady) prepareGoogleSignIn().catch(() => {});
+    if (clientReady) prepareGoogleSignIn().then(() => setGoogleReady(true)).catch(() => setGoogleReady(false));
   }, [clientReady]);
 
   async function run(task: () => Promise<void>, success: string) {
@@ -135,11 +136,11 @@ export function SecureSyncSection() {
         )}
         <div className="mt-4 flex flex-wrap gap-2">
           {!connected ? (
-            <button className="btn btn-primary" disabled={!clientReady || busy} onClick={() => run(async () => {
+            <button className="btn btn-primary" disabled={!clientReady || !googleReady || busy} onClick={() => run(async () => {
               await connectDrive();
               if (unlocked) await sync();
             }, unlocked ? "Connected and synced with Google Drive." : "Connected. Unlock your vault or restore it below.")}>
-              <Cloud size={14}/> Connect Google Drive
+              <Cloud size={14}/> {clientReady && !googleReady ? "Loading Google sign-in…" : "Connect Google Drive"}
             </button>
           ) : (
             <>
