@@ -55,7 +55,8 @@ function ProviderForm({ p }: { p: ProviderId }) {
   const info = PROVIDERS[p];
   const s = useSettings();
   const env = s.env?.providers[p];
-  const [key, setKey] = useState(s.keys[p] || "");
+  const storedKey = s.keys[p];
+  const [key, setKey] = useState(storedKey || "");
   const [model, setModel] = useState(s.models[p] || env?.model || info.defaultModel);
   const [baseUrl, setBaseUrl] = useState(s.ollamaBaseUrl);
   const [show, setShow] = useState(false);
@@ -71,7 +72,7 @@ function ProviderForm({ p }: { p: ProviderId }) {
     setMsg(null);
     setLive(null);
     setLiveErr("");
-  }, [p, s.vaultUnlocked, s.keys[p]]);
+  }, [p, s.vaultUnlocked, storedKey]);
 
   // Providers retire models: fetch what this key can actually use.
   const loadLive = async () => {
