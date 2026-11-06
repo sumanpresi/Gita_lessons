@@ -1,18 +1,20 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, ChevronDown, Database, Download, ExternalLink, Eye, EyeOff, LoaderCircle, Monitor, Moon, PlugZap, Radio, Search, Sparkles, Sun, Trash2, WifiOff, X } from "lucide-react";
+import { Check, ChevronDown, Database, Download, ExternalLink, Eye, EyeOff, LoaderCircle, Monitor, Moon, PlugZap, Radio, Search, ShieldCheck, Sparkles, Sun, Trash2, WifiOff, X } from "lucide-react";
 import { useGita } from "@/lib/store/useGitaStore";
 import { useModal } from "@/lib/hooks/useModal";
 import { useConnection, useSettings } from "@/lib/store/settingsStore";
 import { PROVIDER_ORDER, PROVIDERS, type ProviderId } from "@/lib/llm/providers";
 import { Notice } from "@/components/ui/primitives";
+import { SecureSyncSection } from "./SecureSyncSection";
 
-type Section = "model" | "search" | "appearance" | "data";
+type Section = "model" | "sync" | "search" | "appearance" | "data";
 // Everyday settings first; the AI provider, search engine and graph-database integrations are optional extras.
 const SECTIONS: { id: Section; label: string; icon: React.ReactNode }[] = [
   { id: "appearance", label: "Appearance", icon: <Monitor size={15} /> },
   { id: "model", label: "AI (optional)", icon: <Sparkles size={15} /> },
+  { id: "sync", label: "Secure sync", icon: <ShieldCheck size={15} /> },
   { id: "search", label: "Search · advanced", icon: <Search size={15} /> },
   { id: "data", label: "Graph data · advanced", icon: <Database size={15} /> },
 ];
@@ -69,7 +71,7 @@ function ProviderForm({ p }: { p: ProviderId }) {
     setMsg(null);
     setLive(null);
     setLiveErr("");
-  }, [p]);
+  }, [p, s.vaultUnlocked, s.keys[p]]);
 
   // Providers retire models: fetch what this key can actually use.
   const loadLive = async () => {
@@ -93,7 +95,7 @@ function ProviderForm({ p }: { p: ProviderId }) {
     setSaving(true);
     const r = await s.saveProvider(p, { key: info.envKey ? key : undefined, model, baseUrl: p === "ollama" ? baseUrl : undefined, makeDefault: true });
     setSaving(false);
-    setMsg({ ok: true, text: r.message });
+    setMsg({ ok: r.browser, text: r.message });
   };
   const test = async () => {
     setTesting(true);
@@ -212,14 +214,20 @@ function ProviderForm({ p }: { p: ProviderId }) {
       )}
 
       <div className="flex flex-wrap gap-2 border-t border-line pt-5">
-        <button type="submit" className="btn btn-primary" disabled={saving}>
+        <button type="submit" className="btn btn-primary" disabled={saving || (s.vaultEnabled && !s.vaultUnlocked)}>
           {saving ? <LoaderCircle size={14} className="animate-spin" /> : <Check size={14} />} Save and use
         </button>
         <button type="button" className="btn" onClick={test} disabled={testing || (!!info.envKey && !key && !env?.configured)}>
           {testing ? <LoaderCircle size={14} className="animate-spin" /> : <PlugZap size={14} />} {testing ? "Testing" : "Test connection"}
         </button>
         {info.envKey && (s.keys[p] || env?.source === ".env.local") && (
-          <button type="button" className="btn btn-ghost btn-danger ml-auto" onClick={async () => (await s.forgetKey(p), setKey(""), setMsg({ ok: true, text: "Key removed from this browser and from .env.local." }))}>
+          <button type="button" className="btn btn-ghost btn-danger ml-auto" onClick={async () => {
+            try {
+              await s.forgetKey(p);
+              setKey("");
+              setMsg({ ok: true, text: s.vaultEnabled ? "Key removed from your encrypted vault. Sync to update other devices." : "Key removed from this browser." });
+            } catch (e) { setMsg({ ok: false, text: (e as Error).message }); }
+          }}>
             <Trash2 size={14} /> Remove key
           </button>
         )}
@@ -230,7 +238,7 @@ function ProviderForm({ p }: { p: ProviderId }) {
           <ChevronDown size={14} className="-rotate-90 transition-transform group-open:rotate-0" /> How keys are stored
         </summary>
         <p className="mt-2 pl-5 leading-5">
-          A saved key is kept in this browser&apos;s local storage. When GitaViśva runs on your own machine it is also written to <code className="text-text-2">.env.local</code> (ignored by git) so it survives restarts. Keys are never sent back to the browser from the server. {s.env && !s.env.writable && s.env.reason ? `Here: ${s.env.reason}` : ""}
+          {s.vaultEnabled ? "With secure vault enabled, keys are encrypted in this browser and must be unlocked using your passphrase after restarting. Google Drive receives only encrypted data. Nothing is stored in GitHub." : <>Until you enable the secure vault, saved keys remain in this browser&apos;s local storage. Set up <strong>Secure sync</strong> to encrypt them and safely use them on other devices. When running locally, this app can also write to <code className="text-text-2">.env.local</code>.</>}
         </p>
       </details>
     </form>
@@ -256,6 +264,7 @@ function ModelSection() {
         )}
       </div>
 
+      <div className="mt-4 rounded-2 border border-accent-line bg-accent-soft p-3 text-[12.5px] leading-5 text-text-2">To sync private API keys across devices, open the <strong>Secure sync</strong> tab and create an encrypted vault first.</div>
       <div className="mt-6 text-[12.5px] font-medium text-text-2">Provider</div>
       <div className="mt-2 grid gap-1.5 sm:grid-cols-2" role="radiogroup" aria-label="Provider">
         {PROVIDER_ORDER.map((p) => (
@@ -430,6 +439,7 @@ export function ByokSettingsModal() {
               </nav>
               <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-7">
                 {section === "model" && <ModelSection />}
+                {section === "sync" && <SecureSyncSection />}
                 {section === "search" && <SearchSection />}
                 {section === "appearance" && <AppearanceSection />}
                 {section === "data" && <DataSection />}
