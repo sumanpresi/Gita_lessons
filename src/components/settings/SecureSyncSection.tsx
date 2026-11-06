@@ -27,6 +27,22 @@ export function SecureSyncSection() {
     if (clientReady) prepareGoogleSignIn().then(() => setGoogleReady(true)).catch(() => setGoogleReady(false));
   }, [clientReady]);
 
+  // Refresh cloud changes when the installed app returns to the foreground.
+  useEffect(() => {
+    if (!unlocked) return;
+    const refresh = () => {
+      if (document.visibilityState === "visible" && hasDriveSession()) {
+        void sync().catch(() => { /* Offline or expired sign-in: keep the local encrypted vault. */ });
+      }
+    };
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [unlocked, sync]);
+
   async function run(task: () => Promise<void>, success: string) {
     setBusy(true);
     setMessage(null);
