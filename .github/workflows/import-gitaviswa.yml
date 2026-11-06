@@ -1,0 +1,30 @@
+name: Import GitaVisva into Gita_lessons
+
+on:
+  push:
+    paths:
+      - '.github/workflows/import-gitaviswa.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Import upstream project
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/HimanshuMohanty-Git24/gitaviswa.git
+          git fetch --depth=1 upstream main
+          git rm -rf -- .
+          git checkout FETCH_HEAD -- .
+          git add -A
+          git commit -m "Import GitaVisva source snapshot from HimanshuMohanty-Git24/gitaviswa"
+          git push origin HEAD:main
